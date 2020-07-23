@@ -68,7 +68,7 @@ SerialByte NmeaAnalyzer::SampleByte()
 		//	mResults->AddMarker(mSerial->GetSampleNumber(), AnalyzerResults::Dot, mSettings->mInputChannel);
 		//}
 	}
-	ret.data = data;
+	ret.data = static_cast<unsigned char>(data);
 
 	// Handle parity bit if present.
 	if (mSettings->mParity != AnalyzerEnums::None)
@@ -77,7 +77,7 @@ SerialByte NmeaAnalyzer::SampleByte()
 		mSerial->Advance(mBitOffset);
 		U32 bit_value = mSerial->GetBitState() == BitState::BIT_LOW ? 0 : 1;
 		data |= (bit_value << num_bits);
-		bool is_odd = std::bitset<32>(data).count() % 2;
+		bool is_odd = std::bitset<32>(data).count() % 2 == 1;
 
 		if (mSettings->mParity == AnalyzerEnums::Even && is_odd)
 		{
@@ -134,7 +134,7 @@ SerialByte NmeaAnalyzer::SampleByte()
 	return ret;
 }
 
-void NmeaAnalyzer::WorkerThread()
+[[noreturn]] void NmeaAnalyzer::WorkerThread()
 {
 	mBitOffset = CalculateBitOffset();	
 	mSerial = GetAnalyzerChannelData(mSettings->mInputChannel);
@@ -159,9 +159,10 @@ void NmeaAnalyzer::WorkerThread()
 
 
 
+
 	for( ; ; )
 	{
-		auto data = SampleByte();
+		auto data = this->SampleByte();
 
 		if (data.error != SerialByte::SerialError::None)
 		{
@@ -244,7 +245,7 @@ void NmeaAnalyzer::WorkerThread()
 
 bool NmeaAnalyzer::NeedsRerun()
 {
-	if( mSettings->mUseAutobaud == false )
+	if(!mSettings->mUseAutobaud)
 		return false;
 
 	//ok, lets see if we should change the bit rate, base on mShortestActivePulse
@@ -284,7 +285,7 @@ bool NmeaAnalyzer::NeedsRerun()
 
 U32 NmeaAnalyzer::GenerateSimulationData( U64 minimum_sample_index, U32 device_sample_rate, SimulationChannelDescriptor** simulation_channels )
 {
-	if( mSimulationInitilized == false )
+	if(!mSimulationInitilized)
 	{
 		mSimulationDataGenerator.Initialize( GetSimulationSampleRate(), mSettings.get() );
 		mSimulationInitilized = true;

@@ -12,8 +12,6 @@ NmeaAnalyzerSettings::NmeaAnalyzerSettings()
 	mBitsPerTransfer( 8 ),
 	mStopBits( 1.0 ),
 	mParity( AnalyzerEnums::None ),
-	mShiftOrder( AnalyzerEnums::LsbFirst ),
-	mInverted( false ),
 	mUseAutobaud( false )
 {
 	mInputChannelInterface.reset( new AnalyzerSettingInterfaceChannel() );
@@ -66,27 +64,11 @@ NmeaAnalyzerSettings::NmeaAnalyzerSettings()
 	mParityInterface->SetNumber( mParity );
 
 
-	mShiftOrderInterface.reset( new AnalyzerSettingInterfaceNumberList() );
-	mShiftOrderInterface->SetTitleAndTooltip( "Significant Bit", "Select if the most significant bit or least significant bit is transmitted first" );
-	mShiftOrderInterface->AddNumber( AnalyzerEnums::LsbFirst, "Least Significant Bit Sent First (Standard)", "" );
-	mShiftOrderInterface->AddNumber( AnalyzerEnums::MsbFirst, "Most Significant Bit Sent First", "" );
-	mShiftOrderInterface->SetNumber( mShiftOrder );
-
-
-	mInvertedInterface.reset( new AnalyzerSettingInterfaceNumberList() );
-	mInvertedInterface->SetTitleAndTooltip( "Signal inversion", "Specify if the serial signal is inverted" );
-	mInvertedInterface->AddNumber( false, "Non Inverted (Standard)", "" );
-	mInvertedInterface->AddNumber( true, "Inverted", "" );
-
-	mInvertedInterface->SetNumber( mInverted );enum Mode { Normal, MpModeRightZeroMeansAddress, MpModeRightOneMeansAddress, MpModeLeftZeroMeansAddress, MpModeLeftOneMeansAddress };
-
 	AddInterface( mInputChannelInterface.get() );
 	AddInterface( mBitRateInterface.get() );
 	AddInterface( mBitsPerTransferInterface.get() );
 	AddInterface( mStopBitsInterface.get() );
 	AddInterface( mParityInterface.get() );
-	AddInterface( mShiftOrderInterface.get() );
-	AddInterface( mInvertedInterface.get() );
 
 	//AddExportOption( 0, "Export as text/csv file", "text (*.txt);;csv (*.csv)" );
 	AddExportOption( 0, "Export as text/csv file" );
@@ -104,12 +86,10 @@ NmeaAnalyzerSettings::~NmeaAnalyzerSettings()
 bool NmeaAnalyzerSettings::SetSettingsFromInterfaces()
 {
 	mInputChannel = mInputChannelInterface->GetChannel();
-	mBitRate = mBitRateInterface->GetInteger();
+	mBitRate = static_cast<U32>(mBitRateInterface->GetInteger());
 	mBitsPerTransfer = U32( mBitsPerTransferInterface->GetNumber() );
 	mStopBits = mStopBitsInterface->GetNumber();
 	mParity = AnalyzerEnums::Parity( U32( mParityInterface->GetNumber() ) );
-	mShiftOrder =  AnalyzerEnums::ShiftOrder( U32( mShiftOrderInterface->GetNumber() ) );
-	mInverted = bool( U32( mInvertedInterface->GetNumber() ) );
 	mUseAutobaud = mUseAutobaudInterface->GetValue();
 
 	ClearChannels();
@@ -121,12 +101,10 @@ bool NmeaAnalyzerSettings::SetSettingsFromInterfaces()
 void NmeaAnalyzerSettings::UpdateInterfacesFromSettings()
 {
 	mInputChannelInterface->SetChannel( mInputChannel );
-	mBitRateInterface->SetInteger( mBitRate );
+	mBitRateInterface->SetInteger( static_cast<int>(mBitRate) );
 	mBitsPerTransferInterface->SetNumber( mBitsPerTransfer );
 	mStopBitsInterface->SetNumber( mStopBits );
 	mParityInterface->SetNumber( mParity );
-	mShiftOrderInterface->SetNumber( mShiftOrder );
-	mInvertedInterface->SetNumber( mInverted );
 	mUseAutobaudInterface->SetValue( mUseAutobaud );
 }
 
@@ -137,16 +115,14 @@ void NmeaAnalyzerSettings::LoadSettings( const char* settings )
 
 	const char* name_string;	//the first thing in the archive is the name of the protocol analyzer that the data belongs to.
 	text_archive >> &name_string;
-	if( strcmp( name_string, "SaleaeAsyncNmeaAnalyzer" ) != 0 )
-		AnalyzerHelpers::Assert( "SaleaeAsyncNmeaAnalyzer: Provided with a settings string that doesn't belong to us;" );
+	if( strcmp( name_string, "Nmea0183Analyzer" ) != 0 )
+		AnalyzerHelpers::Assert( "Nmea0183Analyzer: Provided with a settings string that doesn't belong to us;" );
 
 	text_archive >> mInputChannel;
 	text_archive >> mBitRate;
 	text_archive >> mBitsPerTransfer;
 	text_archive >> mStopBits;
 	text_archive >> *(U32*)&mParity;
-	text_archive >> *(U32*)&mShiftOrder;
-	text_archive >> mInverted;
 
 	//check to make sure loading it actual works befor assigning the result -- do this when adding settings to an anylzer which has been previously released.
 	bool use_autobaud;
@@ -163,14 +139,12 @@ const char* NmeaAnalyzerSettings::SaveSettings()
 {
 	SimpleArchive text_archive;
 
-	text_archive << "SaleaeAsyncNmeaAnalyzer";
+	text_archive << "Nmea0183Analyzer";
 	text_archive << mInputChannel;
 	text_archive << mBitRate;
 	text_archive << mBitsPerTransfer;
 	text_archive << mStopBits;
 	text_archive << mParity;
-	text_archive << mShiftOrder;
-	text_archive << mInverted;
 
 	text_archive << mUseAutobaud;
 

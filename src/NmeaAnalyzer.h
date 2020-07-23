@@ -12,7 +12,7 @@ public:
 	NmeaAnalyzer();
 	virtual ~NmeaAnalyzer();
 	virtual void SetupResults();
-	virtual void WorkerThread();
+	[[noreturn]] virtual void WorkerThread() ;
 
 	virtual U32 GenerateSimulationData( U64 newest_sample_requested, U32 sample_rate, SimulationChannelDescriptor** simulation_channels );
 	virtual U32 GetMinimumSampleRateHz();

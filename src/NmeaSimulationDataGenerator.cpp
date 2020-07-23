@@ -18,16 +18,9 @@ void NmeaSimulationDataGenerator::Initialize( U32 simulation_sample_rate, NmeaAn
 	mNmeaSimulationData.SetChannel( mSettings->mInputChannel );
 	mNmeaSimulationData.SetSampleRate( simulation_sample_rate );
 
-	if( mSettings->mInverted == false )
-	{
-		mBitLow = BIT_LOW;
-		mBitHigh = BIT_HIGH;	
-	}
-	else
-	{
-		mBitLow = BIT_HIGH;
-		mBitHigh = BIT_LOW;
-	}
+
+	mBitLow = BIT_LOW;
+	mBitHigh = BIT_HIGH;
 
 	mNmeaSimulationData.SetInitialBitState( mBitHigh );
 	mNmeaSimulationData.Advance( mClockGenerator.AdvanceByHalfPeriod( 10.0 ) );  //insert 10 bit-periods of idle
@@ -71,12 +64,9 @@ void NmeaSimulationDataGenerator::CreateNmeaByte( U64 value )
 	mNmeaSimulationData.Transition();  //low-going edge for start bit
 	mNmeaSimulationData.Advance( mClockGenerator.AdvanceByHalfPeriod() );  //add start bit time
 
-	if( mSettings->mInverted == true )
-		value = ~value;
-
 	U32 num_bits = mSettings->mBitsPerTransfer;
 
-	BitExtractor bit_extractor( value, mSettings->mShiftOrder, num_bits );
+	BitExtractor bit_extractor( value, AnalyzerEnums::ShiftOrder::LsbFirst, num_bits );
 
 	for( U32 i=0; i<num_bits; i++ )
 	{
@@ -87,7 +77,7 @@ void NmeaSimulationDataGenerator::CreateNmeaByte( U64 value )
 	if( mSettings->mParity == AnalyzerEnums::Even )
 	{
 
-		if( AnalyzerHelpers::IsEven( AnalyzerHelpers::GetOnesCount( value ) ) == true )		
+		if(AnalyzerHelpers::IsEven(AnalyzerHelpers::GetOnesCount(value ) ))
 			mNmeaSimulationData.TransitionIfNeeded( mBitLow ); //we want to add a zero bit
 		else
 			mNmeaSimulationData.TransitionIfNeeded( mBitHigh ); //we want to add a one bit
@@ -98,7 +88,7 @@ void NmeaSimulationDataGenerator::CreateNmeaByte( U64 value )
 	if( mSettings->mParity == AnalyzerEnums::Odd )
 	{
 
-		if( AnalyzerHelpers::IsOdd( AnalyzerHelpers::GetOnesCount( value ) ) == true )
+		if(AnalyzerHelpers::IsOdd(AnalyzerHelpers::GetOnesCount(value ) ))
 			mNmeaSimulationData.TransitionIfNeeded( mBitLow ); //we want to add a zero bit
 		else
 			mNmeaSimulationData.TransitionIfNeeded( mBitHigh );

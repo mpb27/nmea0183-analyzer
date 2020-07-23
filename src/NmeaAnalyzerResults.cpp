@@ -60,8 +60,6 @@ void NmeaAnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& /*channe
 			else
 				snprintf(result_str, sizeof(result_str), "%s (parity error)", number_str);
 
-			//snprintf(result_str, sizeof(result_str), "%s (framing error & parity error)", number_str);
-
 			AddResultString(result_str);
 		}
 		else
@@ -110,7 +108,7 @@ void NmeaAnalyzerResults::GenerateExportFile( const char* file, DisplayBase disp
 		}
 
 
-		if( UpdateExportProgressAndCheckForCancel( i, num_frames ) == true )
+		if(UpdateExportProgressAndCheckForCancel(i, num_frames ))
 		{
 			AnalyzerHelpers::EndFile( f );
 			return;
@@ -132,28 +130,7 @@ void NmeaAnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayBase
 
 	if (type == ResultType::SerialByte)
 	{
-		auto byte = reinterpret_cast<SerialByte*>(frame.mData1);
-
-		char number_str[128];
-		AnalyzerHelpers::GetNumberString(byte->data, display_base, bits_per_transfer, number_str, 128);
-
-		if (byte->error != SerialByte::SerialError::None)
-		{
-			char result_str[128];
-
-			if (byte->error == SerialByte::SerialError::Framing)
-				snprintf(result_str, sizeof(result_str), "%s (framing error)", number_str);
-			else
-				snprintf(result_str, sizeof(result_str), "%s (parity error)", number_str);
-
-			//snprintf(result_str, sizeof(result_str), "%s (framing error & parity error)", number_str);
-
-			AddTabularText(result_str);
-		}
-		else
-		{
-			AddTabularText(number_str);
-		}
+	    // ... don't generate text for lone bytes, only for full NMEA strings ...
 	}
 	else if (type == ResultType::NmeaData)
 	{

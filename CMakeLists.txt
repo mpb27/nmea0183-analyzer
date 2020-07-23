@@ -4,7 +4,7 @@ project(nmea0183_analyzer)
 # custom CMake Modules are located in the cmake directory.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-include(ExternalAnalyzerSDK)
+include(ExternalAnalyzerSDK.cmake)
 
 set(SOURCES 
 src/NmeaAnalyzer.cpp
@@ -17,5 +17,5 @@ src/NmeaSimulationDataGenerator.cpp
 src/NmeaSimulationDataGenerator.h
 )
 
-add_analyzer_plugin(nmea0183_analyzer SOURCES ${SOURCES})
+add_analyzer_plugin(Nmea0183Analyzer SOURCES ${SOURCES})
 
